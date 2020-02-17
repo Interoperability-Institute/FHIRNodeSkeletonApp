@@ -1,0 +1,103 @@
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="./main.css" />
+	</head>
+	<body>
+		<main class="main">
+			<h1>SMART Launch Example</h1>
+			<p>
+				To get started, create a SMART App in <a target="_BLANK" href="https://interoperabilityland.com">Interoperability Land.</a>
+			</p>
+			<ol>
+				<li>
+					Navigate to a Sandbox.
+				</li>
+				<li>
+					Choose the FHIR PIT that you would like to connect to.
+				</li>
+				<li>
+					Navigate to the SMART App tab and register a new SMART App
+				</li>
+				<li>
+					Name your SMART App and enter 'http://localhost:5000/' for the Redirect URI and then click OK.
+				</li>
+				<li>
+					Connect to the FHIR PIT using the Client ID that was generated and the FHIR Server URL.
+				</li>
+			</ol>
+			<div id='toast'>
+
+			</div>
+			<section>
+				<div class="container-padding">
+					<h2>Step 1: Connect</h2>
+					<p>Navigate to a FHIR PIT in IOL (Interoperability Land) and enter the URL and paste it in the URL field below. Create a SMART App in IOL and enter the client id into the field below.</p>
+					<div class="form-container">
+						<form id="formConnect">
+							<div>
+								<label for="fhirServerUrl">FHIR Server URL:</label>
+								<div class="form-connect-url-container">
+									<div class='form-connect-url-container-input'>
+										<input type="text" id="fhirServerUrl" placeholder='Ex: https://url.interopland.com/pit-name/' />
+									</div>
+									<div class='form-connect-url-container-trail'>
+										fhir/
+									</div>
+								</div>
+							</div>
+							<div>
+								<label for="clientID">Client ID</label>
+								<input type="text" id="clientID" placeholder='Ex: 2l68pgq4c6gn9p4tvosqt58mlp' />
+							</div>
+							<button type="submit">
+								Connect
+							</button>
+						</form>
+					</div>
+				</div>
+				
+			</section>
+			<section>
+				<div class="container-padding">
+					<h2>Step 2: Search</h2>
+					<div class="form-container">
+						<form id="formPatientSearch">
+							<div>
+								<label for="patient">Patient Family Name:</label>
+								<input type="text" id="patient" placeholder="Ex: Frey" />
+							</div>
+							<button type="submit">
+								Search
+							</button>
+						</form>
+					</div>
+				</div>
+			</section>
+			<section>
+				<div class="container-padding container-results">
+					<h2>
+						Step 3: Results List
+					</h2>
+					<p>Once you have searched, your results will appear here. Click on an item to view the item below.</p>
+				</div>
+				
+				<div id='searchResultsList' class="search-results-list">
+
+				</div>
+			</section>
+			<section>
+				<div class="container-padding container-results">
+					<h2>
+						Step 4: Results Item
+					</h2>
+					<p>Once you have selected form the search result list, your selected item will appear here.</p>
+					<div id='searchResultsItem' class="search-results-item">
+
+					</div>
+				</div>
+			</section>
+		</div>
+	</body>
+	<script src='https://cdn.jsdelivr.net/npm/fhirclient/build/fhir-client.min.js'></script>
+	<script src="./index.js"></script>
+</html>
