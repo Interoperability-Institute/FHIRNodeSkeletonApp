@@ -6,6 +6,13 @@ const onsubmitConnect = event => {
 };
 formConnect.onsubmit = onsubmitConnect;
 
+const formWriteConnect = document.getElementById('formWriteConnect');
+const onsubmitWriteConnect = event => {
+	formHandlerWriteConnect();
+	return false;
+};
+formWriteConnect.onsubmit = onsubmitWriteConnect;
+
 //Step 2: Patient search form handler
 const formPatientSearch = document.getElementById('formPatientSearch');
 const onSubmitPatientSearch = event => {
@@ -13,6 +20,14 @@ const onSubmitPatientSearch = event => {
 	return false;
 };
 formPatientSearch.onsubmit = onSubmitPatientSearch;
+
+//Step 5: Submit patient to screening app
+const formPatientSubmit = document.getElementById('formPatientSubmit');
+const onSubmitPatientSubmit = event => {
+	formHandlerPatientSubmit();
+	return false;
+};
+formPatientSubmit.onsubmit = onSubmitPatientSubmit;
 
 //Step 3: Listen to button click in results list
 document.addEventListener(
@@ -27,21 +42,38 @@ document.addEventListener(
 	false
 );
 
-//Connect to server after the FHIR server redirects
+//Connect to the appropriate server after the FHIR server redirects
+// TODO: WRITE BETTER CONDITION HERE
 FHIR.oauth2
 	.ready()
 	.then(fhirClientData => {
-		const fhirServerUrlField = document.getElementById('fhirServerUrl');
-		const clientIdField = document.getElementById('clientID');
-		const toast = document.getElementById('toast');
-		fhirServerUrlField.value = fhirClientData.state.serverUrl.replace('fhir/', '');
-		clientIdField.value = fhirClientData.state.clientId;
-		toast.innerHTML = 'You have successfully connected and now can search.';
-		toast.classList.add('toast');
+		// tapping into hard-coded oauth scope is a hackaround to preserve state on page refresh; we are using it for demo purposes only. 
+		// The multiple-connections-in-one-window is not a supported case of the fhir-client library.
+		if (fhirClientData.state.scope.includes('patient.read')) 
+		{
+			const fhirServerUrlField = document.getElementById('fhirServerUrl');
+			const clientIdField = document.getElementById('clientID');
+			fhirServerUrlField.value = fhirClientData.state.serverUrl.replace('fhir/', '');
+			clientIdField.value = fhirClientData.state.clientId;
+			const toast = document.getElementById('toast');
+			toast.classList.add('toast');
+			toast.innerHTML = 'You have successfully connected to the READ url and now can search.';
+		}
+		else if (fhirClientData.state.scope.includes('Task.write'))
+		{
+			const fhirServerUrlField = document.getElementById('fhirServerWriteUrl');
+			const clientIdField = document.getElementById('clientWriteID');
+			fhirServerUrlField.value = fhirClientData.state.serverUrl.replace('fhir/', '');
+			clientIdField.value = fhirClientData.state.clientId;
+			const toast = document.getElementById('toast');
+			toast.classList.add('toast');
+			toast.innerHTML = 'You have successfully connected to the WRITE url and now can search.';
+		}
 	})
 	.catch(error => {
 		console.log('Please connect to a FHIR Server.');
 	});
+
 
 //Handles the form for connecting by authorizing through OAuth2
 const formHandlerConnect = () => {
@@ -52,7 +84,23 @@ const formHandlerConnect = () => {
 		client_id: clientID,
 		clientId: clientID,
 		// scope: 'patient/*.read user/Patient.read launch openid profile online_access',
-		scope: `${fireServerUrl}/user.read openid profile ${fireServerUrl}/patient.read`,
+		scope: `${fireServerUrl}/user.read openid profile ${fireServerUrl}/patient.read ${fireServerUrl}/appointment.read`,
+		redirectUri: 'http://localhost:5000/'
+	};
+	FHIR.oauth2.authorize(settings);
+};
+
+//Handles the form for connecting to the Write by authorizing through OAuth2
+const formHandlerWriteConnect = () => {
+	const fireServerUrl = document.getElementById('fhirServerWriteUrl').value;
+	const clientID = document.getElementById('clientWriteID').value;
+	const settings = {
+		iss: `${fireServerUrl}fhir/`,
+		client_id: clientID,
+		clientId: clientID,
+		// scope: 'patient/*.read user/Patient.read launch openid profile online_access',
+		// adjust scope to include write permissions
+		scope: `${fireServerUrl}/user.read openid profile ${fireServerUrl}/Task.write`,
 		redirectUri: 'http://localhost:5000/'
 	};
 	FHIR.oauth2.authorize(settings);
@@ -72,6 +120,25 @@ const formHandlerPatientSearch = () => {
 			}
 		});
 };
+
+//Submit the found patient to the FHIR pit representing the screening app
+const formHandlerPatientSubmit = () => {
+	const myTask = Tasktemplate
+	myTask['for'] = patientResults;
+	
+	const patientName = patientResults.name[0];
+	FHIR.oauth2
+		.ready()
+		.then(client => client.create(myTask))
+		.then(response => {
+			if (response) {
+				document.getElementById('patientSubmissionResults').innerHTML = response;
+			} else {
+				document.getElementById('patientSubmissionResults').innerHTML = "no results from submission...";	
+			}
+		});
+};
+
 
 //Generate the HTML for the search results
 const getSearchResultsDom = results => {
@@ -113,6 +180,7 @@ const listItemHandler = id => {
 			if (response && response.entry) {
 				const resultsDom = getDetailResultDom(response.entry[0].resource);
 				setDetailResult(resultsDom);
+				setDetailResultJSON(response.entry[0].resource)
 			} else {
 			}
 		});
@@ -122,6 +190,7 @@ const listItemHandler = id => {
 const getDetailResultDom = patientData => {
 	const patientNameData = patientData.name[0];
 	const formattedName = getFormattedName(patientNameData);
+	patientResults = patientData;
 	return `
 		<h3>Name</h3>
 		<p>${formattedName}</p>
@@ -137,3 +206,34 @@ const setDetailResult = resultsDom => {
 	const searchResultsItem = document.getElementById('searchResultsItem');
 	searchResultsItem.innerHTML = resultsDom;
 };
+
+const setDetailResultJSON = results => {
+	const searchResultsItemJSON=document.getElementById('searchResultsItemJSON');
+	resultsAsJSON = JSON.stringify(results);
+	searchResultsItemJSON.innerHTML = `<p>${resultsAsJSON}</p>`;
+}
+
+
+const Tasktemplate = {
+		"resourceType": "Task",
+		"id": "exampleTask",
+		"status": "draft",
+		"intent": "proposal",
+		"code": {
+		  "text": "Send this questionnaire to these patients"
+		},
+		"focus": {
+		  "reference": "Questionnaire/1"
+		},
+		"for": {
+		  "reference": "Patient/f001"
+		},
+		"authoredOn": "2016-03-10T22:39:32-04:00",
+		"lastModified": "2016-03-10T22:39:32-04:00",
+		"requester": {
+		  "reference": "Practitioner/example"
+		},
+		"owner": {
+		  "reference": "Practitioner/example"
+		}
+	  }

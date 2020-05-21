@@ -30,7 +30,7 @@
 			</div>
 			<section>
 				<div class="container-padding">
-					<h2>Step 1: Connect</h2>
+					<h2>Step 1A: Connect</h2>
 					<p>Navigate to a FHIR PIT in IOL (Interoperability Land) and enter the URL and paste it in the URL field below. Create a SMART App in IOL and enter the client id into the field below.</p>
 					<div class="form-container">
 						<form id="formConnect">
@@ -55,7 +55,35 @@
 						</form>
 					</div>
 				</div>
-				
+			</section>
+			<section>
+				<div class="container-padding">
+					<h2>Step 1B (Optional): Connect to a pit for writing</h2>
+					<p>Enter details to a second pit (Interoperability Land) and enter the URL and paste it in the URL field below. Create a SMART App in IOL and enter the client id into the field below.</p>
+					<p>At this time, the FHIR.js API only supports one connection per window, so this will replace the above connection.</p>
+					<div class="form-container">
+						<form id="formWriteConnect">
+							<div>
+								<label for="fhirServerWriteUrl">FHIR Server URL:</label>
+								<div class="form-connect-url-container">
+									<div class='form-connect-url-container-input'>
+										<input type="text" id="fhirServerWriteUrl" placeholder='Ex: https://url.interopland.com/pit-name/' />
+									</div>
+									<div class='form-connect-url-container-trail'>
+										fhir/
+									</div>
+								</div>
+							</div>
+							<div>
+								<label for="clientWriteID">Client ID</label>
+								<input type="text" id="clientWriteID" placeholder='Ex: 2l68pgq4c6gn9p4tvosqt58mlp' />
+							</div>
+							<button type="submit">
+								Connect
+							</button>
+						</form>
+					</div>
+				</div>
 			</section>
 			<section>
 				<div class="container-padding">
@@ -80,9 +108,7 @@
 					</h2>
 					<p>Once you have searched, your results will appear here. Click on an item to view the item below.</p>
 				</div>
-				
 				<div id='searchResultsList' class="search-results-list">
-
 				</div>
 			</section>
 			<section>
@@ -90,11 +116,81 @@
 					<h2>
 						Step 4: Results Item
 					</h2>
-					<p>Once you have selected form the search result list, your selected item will appear here.</p>
+					<p>Once you have selected from the search result list, your selected item will appear here.</p>
 					<div id='searchResultsItem' class="search-results-item">
-
 					</div>
 				</div>
+			</section>
+			<section>
+				<div class="container-padding container-results">
+					<h2>
+						Step 4a: Results Item (as JSON)
+					</h2>
+					<p>Once you have selected from the search result list, your selected item will appear here.</p>
+					<p>Copy it to your system clipboard to paste it later on in this page.</p>
+					<div id='searchResultsItemJSON' class="search-results-item">
+					</div>
+				</div>
+			</section>
+			<section>
+				<form id="formPatientSubmit">
+					<h2>Step 5: Submit to screening app</h2>
+					<button type="submit">
+						Send Patient to Screening App
+					</button>
+				</form>
+			</section>
+			<section>
+				<form id="step6Submit">
+					<h2>Step 6: Send Questionnaire from Screening app</h2>
+					<button type="submit">
+						Send Questionnaire from Screening App to Patient
+					</button>
+					<p>TODO: GET request for Questionnaire</p>
+					<p>TODO: POST request for Questionnaire to additional service</p>
+				</form>
+			</section>
+			<section>
+				<form id="step7Submit">
+					<h2>Step 7: View Questionnaire sent</h2>
+					<p> TODO: Display the questionnaire results from the step 6GET request </p>
+				</form>
+			</section>
+			<section>
+				<form id="step8Submit">
+					<h2>Step 8: View Quetionnaire and Consent responses </h2>
+					<p> TODO: Display the questionnaire results from the step 6 POST request </p>
+				</form>
+			</section>
+			<section>
+				<form id="step9Submit">
+					<h2>Step 9: Send Questionnaire and Consent results to Blaze Global </h2>
+					<p> TODO:  </p>
+				</form>
+			</section>
+			<section>
+				<form id="step10Submit">
+					<h2>Step 10: View the Questionnaire and Consent objects inside the Blaze Global PIT </h2>
+					<p> TODO:  </p>
+				</form>
+			</section>
+			<section>
+				<form id="step11Submit">
+					<h2>Step 11 (SCENARIO 3): Generate a communicationRequest </h2>
+					<p> TODO:  </p>
+				</form>
+			</section>
+			<section>
+				<form id="step12Submit">
+					<h2>Step 12: Send the CommunicationRequest object to BlazeGlobal</h2>
+					<p> TODO:  </p>
+					<button>
+						Accept Communication Request (by sending Questionnaires)
+					</button>
+					<button>
+						Decline Communication Request ()
+					</button>
+				</form>
 			</section>
 		</div>
 	</body>
