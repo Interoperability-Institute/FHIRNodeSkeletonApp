@@ -14,12 +14,12 @@ const onsubmitWriteConnect = event => {
 formWriteConnect.onsubmit = onsubmitWriteConnect;
 
 //Step 2: Patient search form handler
-const formPatientSearch = document.getElementById('formPatientSearch');
-const onSubmitPatientSearch = event => {
-	formHandlerPatientSearch();
+const formAppointmentSearch = document.getElementById('formAppointmentSearch');
+const onSubmitAppointmentSearch = event => {
+	formHandlerAppointmentSearch();
 	return false;
 };
-formPatientSearch.onsubmit = onSubmitPatientSearch;
+formAppointmentSearch.onsubmit = onSubmitAppointmentSearch;
 
 //Step 5: Submit patient to screening app
 const formPatientSubmit = document.getElementById('formPatientSubmit');
@@ -29,11 +29,12 @@ const onSubmitPatientSubmit = event => {
 };
 formPatientSubmit.onsubmit = onSubmitPatientSubmit;
 
+
 //Step 3: Listen to button click in results list
 document.addEventListener(
 	'click',
 	event => {
-		if (event.target.className === 'button') {
+		if (event.target.classList.contains('patientButton')) {
 			const element = event.target;
 			const id = element.dataset.id;
 			listItemHandler(id);
@@ -43,13 +44,12 @@ document.addEventListener(
 );
 
 //Connect to the appropriate server after the FHIR server redirects
-// TODO: WRITE BETTER CONDITION HERE
 FHIR.oauth2
 	.ready()
 	.then(fhirClientData => {
 		// tapping into hard-coded oauth scope is a hackaround to preserve state on page refresh; we are using it for demo purposes only. 
 		// The multiple-connections-in-one-window is not a supported case of the fhir-client library.
-		if (fhirClientData.state.scope.includes('patient.read')) 
+		if (fhirClientData.state.scope.includes('Appointment.read')) 
 		{
 			const fhirServerUrlField = document.getElementById('fhirServerUrl');
 			const clientIdField = document.getElementById('clientID');
@@ -84,7 +84,7 @@ const formHandlerConnect = () => {
 		client_id: clientID,
 		clientId: clientID,
 		// scope: 'patient/*.read user/Patient.read launch openid profile online_access',
-		scope: `${fireServerUrl}/user.read openid profile ${fireServerUrl}/patient.read ${fireServerUrl}/appointment.read`,
+		scope: `${fireServerUrl}/user.read openid profile ${fireServerUrl}/Patient.read ${fireServerUrl}/Appointment.read`,
 		redirectUri: 'http://localhost:5000/'
 	};
 	FHIR.oauth2.authorize(settings);
@@ -100,56 +100,77 @@ const formHandlerWriteConnect = () => {
 		clientId: clientID,
 		// scope: 'patient/*.read user/Patient.read launch openid profile online_access',
 		// adjust scope to include write permissions
-		scope: `${fireServerUrl}/user.read openid profile ${fireServerUrl}/Task.write`,
+		scope: `${fireServerUrl}/user.read openid profile ${fireServerUrl}/Task.write ${fireServerUrl}/Patient.write`,
 		redirectUri: 'http://localhost:5000/'
 	};
 	FHIR.oauth2.authorize(settings);
 };
 
+
 //Query the FHIR server when a search is made
-const formHandlerPatientSearch = () => {
-	const patientName = document.getElementById('patient').value;
+const formHandlerAppointmentSearch = () => {
+
+	const startDate = document.getElementById('startDate').innerHTML;
+	const endDate = document.getElementById('endDate').innerHTML;
+
+	const dateSearchString = 'Appointment?date=>=' + startDate + '&date=<=' + endDate;
+
+	//const patientName = document.getElementById('patient').value;
 	FHIR.oauth2
 		.ready()
-		.then(client => client.request(`Patient?family=${patientName}`))
+		.then(client => client.request(dateSearchString))
 		.then(response => {
 			if (response && response.entry) {
 				const resultsDom = getSearchResultsDom(response);
+				const patientListDom = getPatientButtonList(response);
 				setSearchResults(resultsDom);
+				setPatientResults(patientListDom)
+				console.log(response.entry);
 			} else {
 			}
 		});
 };
 
+document.getElementById('loadFromCookies').onclick = function() {
+	console.log('load cookies was clicked');
+	let savedPatient = getPatientDataFromCookie();
+	console.log(`tried to load patient: ${savedPatient} from cookies...`);
+	document.getElementById('loadedPatients').innerHTML = `<p>${savedPatient}</p>`;
+} 
+
+document.getElementById('eraseFromCookies').onclick = function() {
+	let savedPatient = eraseCookie('patient');
+} 
+
 //Submit the found patient to the FHIR pit representing the screening app
 const formHandlerPatientSubmit = () => {
-	const myTask = Tasktemplate
-	myTask['for'] = patientResults;
-	
-	const patientName = patientResults.name[0];
-	FHIR.oauth2
-		.ready()
-		.then(client => client.create(myTask))
-		.then(response => {
-			if (response) {
-				document.getElementById('patientSubmissionResults').innerHTML = response;
-			} else {
-				document.getElementById('patientSubmissionResults').innerHTML = "no results from submission...";	
-			}
-		});
+	patientElement = document.getElementById('loadedPatients').innerHTML;
+	patientElementWithoutTags=patientElement.slice(3, -4); // remove <p></p>
+	sendPatientToConnectathonPit(patientElementWithoutTags);
 };
 
 
 //Generate the HTML for the search results
 const getSearchResultsDom = results => {
-	const patientList = results.entry.reduce((patientList, patientResult) => {
-		const patientNameData = patientResult.resource.name[0];
-		const formattedName = getFormattedName(patientNameData);
-		const patientId = patientResult.resource.id;
-		return patientList + `<li><button data-id="${patientId}" class='button'>${formattedName}</button></li>`;
+	const AppointmentList = results.entry.reduce((AppointmentList, AppointmentResult) => {
+		
+		const AppointmentId = AppointmentResult.resource.id;
+		const AppointmentStart = AppointmentResult.resource.start;
+		const AppointmentEnd = AppointmentResult.resource.end;
+		const PatientId = AppointmentResult.resource.participant[1].actor.reference;
+		return AppointmentList + `<li><button data-id="${AppointmentId}" patient-id="${PatientId}" class='button'>${AppointmentStart},${AppointmentEnd}</button></li>`;
 	}, '');
-	return `<ul>${patientList}</ul>`;
+	return `<ul>${AppointmentList}</ul>`;
 };
+
+const getPatientButtonList = results => {
+	const PatientList = results.entry.reduce((PatientList, AppointmentResult) => {
+		const PatientId = AppointmentResult.resource.participant[1].actor.reference; 
+		const PatientName = AppointmentResult.resource.participant[1].actor.display;
+		return PatientList + `<li><button data-id="${PatientId}" class='button patientButton'>${PatientId} - ${PatientName}</button></li>`;
+	}, '');
+	return `<ul>${PatientList}</ul>`;
+}
 
 //Apply insert search results into page
 const setSearchResults = resultsDom => {
@@ -157,83 +178,52 @@ const setSearchResults = resultsDom => {
 	serchResults.innerHTML = resultsDom;
 };
 
-//Takes the FHIR data for a name and converts it to a string
-const getFormattedName = patientNameData => {
-	const familyName = patientNameData.family;
-	const givenName = getGivenName(patientNameData.given);
-	return `${givenName}${familyName}`;
-};
-
-//Takes an an array of given names and concatenates them into a single string
-const getGivenName = givenNameArray => {
-	return givenNameArray.reduce((givenNameString, givenNamePart) => {
-		return `${givenNameString}${givenNamePart} `;
-	}, '');
+const setPatientResults = resultsDom => {
+	const serchResults = document.getElementById('patientsFromAppointmentsList');
+	serchResults.innerHTML = resultsDom;
 };
 
 //Get results from FHIR server
 const listItemHandler = id => {
+	const patientSearchString = 'Patient?_id=' + id;
+	let patientResults = ''
+
 	FHIR.oauth2
 		.ready()
-		.then(client => client.request(`Patient?_id=${id}`))
+		.then(client => client.request(patientSearchString))
 		.then(response => {
 			if (response && response.entry) {
-				const resultsDom = getDetailResultDom(response.entry[0].resource);
-				setDetailResult(resultsDom);
-				setDetailResultJSON(response.entry[0].resource)
+				patientResults = response;
+				console.log(response.entry[0]);
+				// storing patient data in a cookie is not recommended, and is done for demo purposes only.
+				setCookie('patient', JSON.stringify(patientResults), 100);
 			} else {
 			}
 		});
 };
 
-//Generate HTML for detail view
-const getDetailResultDom = patientData => {
-	const patientNameData = patientData.name[0];
-	const formattedName = getFormattedName(patientNameData);
-	patientResults = patientData;
-	return `
-		<h3>Name</h3>
-		<p>${formattedName}</p>
-		<h3>Birth Date</h3>
-		<p>${patientData.birthDate}</p>
-		<h3>Gender</h3>
-		<p>${patientData.gender}</p>
-	`;
-};
+const sendPatientToConnectathonPit = patient => {
+		console.log(`attempting to send patient: ${patient} to ConnectathonApplication pit`);
+		FHIR.oauth2
+			.ready()
+			.then(client => client.request({
+				url: "Patient/",
+				method: "POST",
+				body: patient
+				//TODO: The FHIR client library does not properly set content headers 
+				// for resource creation. As a result, a workaround is required beyond
+				// this point.
+			}))
+			.then(response => {
+					console.log(response);
+			});
 
-//Set results in HTML for the detail view
-const setDetailResult = resultsDom => {
-	const searchResultsItem = document.getElementById('searchResultsItem');
-	searchResultsItem.innerHTML = resultsDom;
-};
-
-const setDetailResultJSON = results => {
-	const searchResultsItemJSON=document.getElementById('searchResultsItemJSON');
-	resultsAsJSON = JSON.stringify(results);
-	searchResultsItemJSON.innerHTML = `<p>${resultsAsJSON}</p>`;
+		console.log('sent: ' + patient + ' to write URL');
 }
 
-
-const Tasktemplate = {
-		"resourceType": "Task",
-		"id": "exampleTask",
-		"status": "draft",
-		"intent": "proposal",
-		"code": {
-		  "text": "Send this questionnaire to these patients"
-		},
-		"focus": {
-		  "reference": "Questionnaire/1"
-		},
-		"for": {
-		  "reference": "Patient/f001"
-		},
-		"authoredOn": "2016-03-10T22:39:32-04:00",
-		"lastModified": "2016-03-10T22:39:32-04:00",
-		"requester": {
-		  "reference": "Practitioner/example"
-		},
-		"owner": {
-		  "reference": "Practitioner/example"
-		}
-	  }
+// This is a workaround to accomodate the single-connection-per-window limitation of the 
+// FHIR client library. 
+function getPatientDataFromCookie() {
+	var patient = getCookie("patient");
+	return patient;
+}

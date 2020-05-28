@@ -30,7 +30,7 @@
 			</div>
 			<section>
 				<div class="container-padding">
-					<h2>Step 1A: Connect</h2>
+					<h2>Step 1: Connect to global health pit </h2>
 					<p>Navigate to a FHIR PIT in IOL (Interoperability Land) and enter the URL and paste it in the URL field below. Create a SMART App in IOL and enter the client id into the field below.</p>
 					<div class="form-container">
 						<form id="formConnect">
@@ -56,11 +56,53 @@
 					</div>
 				</div>
 			</section>
+			
 			<section>
 				<div class="container-padding">
-					<h2>Step 1B (Optional): Connect to a pit for writing</h2>
-					<p>Enter details to a second pit (Interoperability Land) and enter the URL and paste it in the URL field below. Create a SMART App in IOL and enter the client id into the field below.</p>
-					<p>At this time, the FHIR.js API only supports one connection per window, so this will replace the above connection.</p>
+				 <form id="formAppointmentSearch">
+					<h2>Step 2: Search global health pit for upcoming appointments, by date range.</h2>
+					<fieldset id="">
+					   <p>
+					         Please select a date range for your appointment. Availability will be shown between these dates.
+					   </p>
+					   <label for="startDate">startDate</label>
+	                   <input type="text" id="startDate" placeholder="yyyy/mm/dd" /> 
+					   
+					    <label for="endDate">endDate</label>
+					   <input type="text" id="endDate" placeholder="yyyy/mm/dd" />
+                    </fieldset>
+					<button type="submit">
+								Search
+					</button>
+				 </form>	
+					
+				</div>
+			</section>
+			<section>
+				<div class="container-padding container-results">
+					<h2>
+						Step 3: Appointments in that date range
+					</h2>
+					<p> Once you have searched, your results will appear here </p>
+				</div>
+				<div id='searchResultsList' class="search-results-list">
+				</div>
+			</section>
+			<section>
+				<div class="container-padding container-results">
+					<h2>
+						Step 4: Select Patients
+					</h2>
+					<p>This is the list of patients for which appointments fall in the range.</p>
+					<p>Click an item to prepare it to be sent to the screening app</p>
+					<div id='patientsFromAppointmentsList' class="search-results-list">
+					</div>
+				</div>
+			</section>
+			<section>
+				<div class="container-padding">
+					<h2>Step 5: Connect to the Connectathon Application Pit</h2>
+					<p>Enter details to a second pit (Interoperability Land) and enter the URL and paste it in the URL field below. </p>
 					<div class="form-container">
 						<form id="formWriteConnect">
 							<div>
@@ -86,114 +128,28 @@
 				</div>
 			</section>
 			<section>
-				<div class="container-padding">
-					<h2>Step 2: Search</h2>
-					<div class="form-container">
-						<form id="formPatientSearch">
-							<div>
-								<label for="patient">Patient Family Name:</label>
-								<input type="text" id="patient" placeholder="Ex: Frey" />
-							</div>
-							<button type="submit">
-								Search
-							</button>
-						</form>
-					</div>
-				</div>
-			</section>
-			<section>
 				<div class="container-padding container-results">
 					<h2>
-						Step 3: Results List
+						Step 6: Load patients from cookies
 					</h2>
-					<p>Once you have searched, your results will appear here. Click on an item to view the item below.</p>
-				</div>
-				<div id='searchResultsList' class="search-results-list">
-				</div>
-			</section>
-			<section>
-				<div class="container-padding container-results">
-					<h2>
-						Step 4: Results Item
-					</h2>
-					<p>Once you have selected from the search result list, your selected item will appear here.</p>
-					<div id='searchResultsItem' class="search-results-item">
-					</div>
-				</div>
-			</section>
-			<section>
-				<div class="container-padding container-results">
-					<h2>
-						Step 4a: Results Item (as JSON)
-					</h2>
-					<p>Once you have selected from the search result list, your selected item will appear here.</p>
-					<p>Copy it to your system clipboard to paste it later on in this page.</p>
-					<div id='searchResultsItemJSON' class="search-results-item">
+					<p>Click the button to load stored data from step 4.</p>
+					<button id="loadFromCookies">Load stored patient(s) from local storage (cookies)</button>
+					<button id="eraseFromCookies">Delete patients from local storage (cookies)</button>
+					<div id='loadedPatients' class="search-results-list"></div>
 					</div>
 				</div>
 			</section>
 			<section>
 				<form id="formPatientSubmit">
-					<h2>Step 5: Submit to screening app</h2>
+					<h2>Step 7: Attempt to submit patient to screening app once loaded in step 6</h2>
 					<button type="submit">
-						Send Patient to Screening App
+						Send Patient to Currently Connected Pit
 					</button>
 				</form>
-			</section>
-			<section>
-				<form id="step6Submit">
-					<h2>Step 6: Send Questionnaire from Screening app</h2>
-					<button type="submit">
-						Send Questionnaire from Screening App to Patient
-					</button>
-					<p>TODO: GET request for Questionnaire</p>
-					<p>TODO: POST request for Questionnaire to additional service</p>
-				</form>
-			</section>
-			<section>
-				<form id="step7Submit">
-					<h2>Step 7: View Questionnaire sent</h2>
-					<p> TODO: Display the questionnaire results from the step 6GET request </p>
-				</form>
-			</section>
-			<section>
-				<form id="step8Submit">
-					<h2>Step 8: View Quetionnaire and Consent responses </h2>
-					<p> TODO: Display the questionnaire results from the step 6 POST request </p>
-				</form>
-			</section>
-			<section>
-				<form id="step9Submit">
-					<h2>Step 9: Send Questionnaire and Consent results to Blaze Global </h2>
-					<p> TODO:  </p>
-				</form>
-			</section>
-			<section>
-				<form id="step10Submit">
-					<h2>Step 10: View the Questionnaire and Consent objects inside the Blaze Global PIT </h2>
-					<p> TODO:  </p>
-				</form>
-			</section>
-			<section>
-				<form id="step11Submit">
-					<h2>Step 11 (SCENARIO 3): Generate a communicationRequest </h2>
-					<p> TODO:  </p>
-				</form>
-			</section>
-			<section>
-				<form id="step12Submit">
-					<h2>Step 12: Send the CommunicationRequest object to BlazeGlobal</h2>
-					<p> TODO:  </p>
-					<button>
-						Accept Communication Request (by sending Questionnaires)
-					</button>
-					<button>
-						Decline Communication Request ()
-					</button>
-				</form>
-			</section>
+			</section>	
 		</div>
 	</body>
 	<script src='https://cdn.jsdelivr.net/npm/fhirclient/build/fhir-client.min.js'></script>
+	<script src="./cookieUtils.js"></script>
 	<script src="./index.js"></script>
 </html>
